@@ -15,6 +15,8 @@ import com.atlassian.seraph.auth.DefaultAuthenticator;
 import com.atlassian.seraph.config.SecurityConfigFactory;
 import com.bitium.jira.config.SAMLJiraConfig;
 import com.bitium.saml.servlet.SsoLoginServlet;
+import com.atlassian.jira.user.UserUtils;
+import java.security.Principal;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -30,13 +32,13 @@ public class SsoJiraLoginServlet extends SsoLoginServlet {
 		Authenticator authenticator = SecurityConfigFactory.getInstance().getAuthenticator();
 
 		if (authenticator instanceof DefaultAuthenticator) {
-		    Method getUserMethod = DefaultAuthenticator.class.getDeclaredMethod("getUser", new Class[]{String.class});
-		    getUserMethod.setAccessible(true);
-		    Object userObject = getUserMethod.invoke(authenticator, new Object[]{username});
+			//BEGIN FILAMENT: Google Apps sends the email address
+			Principal userObject = UserUtils.getUserByEmail(username); 
+			//END FILAMENT
 
 			// if not found, see if we're allowed to auto-create the user
 			if (userObject == null) {
-				userObject = tryCreateOrUpdateUser(username);
+				userObject = (Principal) tryCreateOrUpdateUser(username);
 			}
 
 		    if(userObject != null && userObject instanceof ApplicationUser) {
